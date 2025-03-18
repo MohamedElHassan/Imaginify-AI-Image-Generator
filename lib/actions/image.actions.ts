@@ -6,7 +6,7 @@ import { handleError } from "../utils";
 import User from "../database/models/user.model";
 import Image from "../database/models/image.model";
 import { redirect } from "next/navigation";
-
+import { v2 as cloudinary } from "cloudinary";
 const populateUser = (query: any) =>
   query.populate({
     path: "author",
@@ -47,9 +47,13 @@ export async function updateImage({ image, userId, path }: UpdateImageParams) {
 
     // By default, findByIdAndUpdate returns the document as it was BEFORE the update
     // {new: true} tells MongoDB to return the document AFTER the update is applied
-    const updatedImage = await Image.findByIdAndUpdate(imageToUpdate._id, image, {
-      new: true,
-    });
+    const updatedImage = await Image.findByIdAndUpdate(
+      imageToUpdate._id,
+      image,
+      {
+        new: true,
+      }
+    );
 
     revalidatePath(path);
 
@@ -66,7 +70,7 @@ export async function deleteImage(imageId: string) {
     await Image.findByIdAndDelete(imageId);
   } catch (error) {
     handleError(error);
-  }finally {
+  } finally {
     redirect("/");
   }
 }
@@ -74,12 +78,73 @@ export async function deleteImage(imageId: string) {
 export async function getImageById(imageId: string) {
   try {
     await connectToDatabase();
-    
+
     const image = await populateUser(Image.findById(imageId));
 
     if (!image) throw new Error("Image not found");
 
     return JSON.parse(JSON.stringify(image));
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+// GET IMAGES
+export async function getAllImages({
+  limit = 9,
+  page = 1,
+  searchQuery = "",
+}: {
+  limit?: number;
+  page: number;
+  searchQuery?: string;
+}) {
+  try {
+    await connectToDatabase();
+
+    cloudinary.config({
+      cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
+      secure: true,
+    });
+
+    let expression = "folder=image-ai-saas";
+
+    if (searchQuery) {
+      expression += ` AND ${searchQuery}`;
+    }
+
+    const { resources } = await cloudinary.search
+      .expression(expression)
+      .execute();
+
+    const resourseIds = resources.map((resource) => resource.public_id);
+
+    let query = {};
+
+    if (searchQuery) {
+      query = {
+        publicId: {
+          $in: resourseIds,
+        },
+      };
+    }
+
+    const skipAmount = Number(page - 1) * limit;
+
+    const images = await populateUser(Image.find(query))
+      .sort({ createdAt: -1 })
+      .skip(skipAmount)
+      .limit(limit);
+    const totalImages = await Image.find(query).countDocuments(query);
+    const savedImages = await Image.find().countDocuments(query);
+
+    return {
+      data: JSON.parse(JSON.stringify(images)),
+      totalPage: Math.ceil(totalImages / limit),
+      savedImages,
+    }
   } catch (error) {
     handleError(error);
   }
