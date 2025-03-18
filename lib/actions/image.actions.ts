@@ -89,7 +89,7 @@ export async function getImageById(imageId: string) {
   }
 }
 
-// GET IMAGES
+// GET ALL IMAGES
 export async function getAllImages({
   limit = 9,
   page = 1,
@@ -118,33 +118,35 @@ export async function getAllImages({
     const { resources } = await cloudinary.search
       .expression(expression)
       .execute();
-
-    const resourseIds = resources.map((resource) => resource.public_id);
+    console.log("resources", resources);
+    
+    const resourceIds = resources.map((resource: any) => resource.public_id);
 
     let query = {};
 
     if (searchQuery) {
       query = {
         publicId: {
-          $in: resourseIds,
+          $in: resourceIds,
         },
       };
     }
 
-    const skipAmount = Number(page - 1) * limit;
+    const skipAmount = (Number(page) - 1) * limit;
 
     const images = await populateUser(Image.find(query))
-      .sort({ createdAt: -1 })
+      .sort({ updatedAt: -1 })
       .skip(skipAmount)
       .limit(limit);
-    const totalImages = await Image.find(query).countDocuments(query);
-    const savedImages = await Image.find().countDocuments(query);
+
+    const totalImages = await Image.find(query).countDocuments();
+    const savedImages = await Image.find().countDocuments();
 
     return {
       data: JSON.parse(JSON.stringify(images)),
       totalPage: Math.ceil(totalImages / limit),
       savedImages,
-    }
+    };
   } catch (error) {
     handleError(error);
   }
