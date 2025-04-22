@@ -1,7 +1,7 @@
 // middleware.ts
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-
+// TODO: Understand why this is needed and how it works and why there was errors
 const isPublicRoute = createRouteMatcher([
   '/api/webhooks/stripe(.*)',
   '/api/webhooks/clerk(.*)',
