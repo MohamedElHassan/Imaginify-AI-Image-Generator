@@ -9,7 +9,7 @@ import { getImageById } from "@/lib/actions/image.actions";
 import { auth } from "@clerk/nextjs/server";
 
 const Page = async ({ params: { id } }: SearchParamProps) => {
-  const { userId } = auth();
+  const { userId } = await auth();
 
   if (!userId) redirect("/sign-in");
 

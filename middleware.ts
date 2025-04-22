@@ -7,7 +7,7 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 const isPublicRoute = createRouteMatcher([
   '/api/webhooks/stripe(.*)',  // Stripe webhook receiver remains public
   '/api/webhooks/clerk(.*)',   // Clerk webhook receiver remains public
-  '/route(.*)',                // Your custom /route endpoint
+  '/',                // Your custom /route endpoint
 ]);
 
 //
