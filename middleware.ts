@@ -10,6 +10,7 @@ const isPublicRoute = createRouteMatcher([
   '/sign-up(.*)',         // allow Clerk’s sign-up page
   '/api/auth(.*)',        // allow Clerk’s auth API
   '/_next(.*)',           // allow Next.js internals
+  '/'
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
