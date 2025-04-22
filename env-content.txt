@@ -1,0 +1,21 @@
+# Clerk
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_Y2xldmVyLXJlaW5kZWVyLTIuY2xlcmsuYWNjb3VudHMuZGV2JA
+CLERK_SECRET_KEY=sk_test_RUHjEqIsBk9sSfMXXPuRkDJZP30iwnnh7PWdybWPaa
+
+# Clerk URLs
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
+
+# Clerk Webhook Secret
+WEBHOOK_SECRET=whsec_/0Gp9lCgJsVd/w4S80wbcdJJXHIB+TWN
+
+# MongoDB
+MONGODB_URL=mongodb+srv://mabouhashem7:zOrCfkCKfsTeClsA@cluster0-saas-ai-nextjs.tsxbk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0-saas-ai-nextjs
+
+# Cloudinary
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=dgz3iasjp
+CLOUDINARY_API_KEY=761274633848782
+CLOUDINARY_API_SECRET=Id0-D_obCBSDCdVWArHcwUoWML0
+# CLOUDINARY_URL=cloudinary://761274633848782:Id0-D_obCBSDCdVWArHcwUoWML0@dgz3iasjp
