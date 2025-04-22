@@ -110,26 +110,43 @@ export async function getAllImages({
     });
 
     let expression = "folder=image-ai-saas";
-
+    let query: any = {};
+    // TODO: add search by on the image, not jsut the title
     if (searchQuery) {
-      expression += ` AND ${searchQuery}`;
+      // Format the search query for Cloudinary
+      // This searches in the tags and context fields which are commonly used for searchable metadata
+      // Removed '*' for partial matching as it caused syntax errors. Cloudinary might handle prefix matching automatically or require different syntax.
+      // Consider reviewing Cloudinary search API docs for best practices on partial matching if needed.
+      // Removed 'image_analysis.data.tags' as it's not supported by Cloudinary search API
+      expression += ` AND (tags:${searchQuery} OR context.title:${searchQuery} OR context.alt:${searchQuery})`;
+
+      // Also create a MongoDB query that will search in title and prompt fields
+      query = {
+        $or: [
+          { title: { $regex: searchQuery, $options: "i" } },
+          { prompt: { $regex: searchQuery, $options: "i" } },
+        ],
+      };
     }
 
+    // Get resources from Cloudinary
     const { resources } = await cloudinary.search
       .expression(expression)
       .execute();
-    console.log("resources", resources);
-    
-    const resourceIds = resources.map((resource: any) => resource.public_id);
 
-    let query = {};
+    // If we have results from Cloudinary, add their IDs to our MongoDB query
+    if (resources && resources.length > 0) {
+      const resourceIds = resources.map((resource: any) => resource.public_id);
 
-    if (searchQuery) {
-      query = {
-        publicId: {
-          $in: resourceIds,
-        },
-      };
+      if (searchQuery) {
+        // Add publicId condition to our existing query
+        query = {
+          $or: [...(query.$or || []), { publicId: { $in: resourceIds } }],
+        };
+      } else {
+        // If no search query, we can just use the resource IDs
+        query = { publicId: { $in: resourceIds } };
+      }
     }
 
     const skipAmount = (Number(page) - 1) * limit;
@@ -146,6 +163,37 @@ export async function getAllImages({
       data: JSON.parse(JSON.stringify(images)),
       totalPage: Math.ceil(totalImages / limit),
       savedImages,
+    };
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+// GET IMAGES BY USER
+export async function getUserImages({
+  limit = 9,
+  page = 1,
+  userId,
+}: {
+  limit?: number;
+  page: number;
+  userId: string;
+}) {
+  try {
+    await connectToDatabase();
+
+    const skipAmount = (Number(page) - 1) * limit;
+
+    const images = await populateUser(Image.find({ author: userId }))
+      .sort({ updatedAt: -1 })
+      .skip(skipAmount)
+      .limit(limit);
+
+    const totalImages = await Image.find({ author: userId }).countDocuments();
+
+    return {
+      data: JSON.parse(JSON.stringify(images)),
+      totalPages: Math.ceil(totalImages / limit),
     };
   } catch (error) {
     handleError(error);

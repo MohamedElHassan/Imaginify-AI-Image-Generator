@@ -1,5 +1,6 @@
-import { dataUrl, debounce, getImageSize } from "@/lib/utils";
-import { CldImage } from "next-cloudinary";
+"use client";
+import { dataUrl, debounce, download, getImageSize } from "@/lib/utils";
+import { CldImage, getCldImageUrl } from "next-cloudinary";
 import { PlaceholderValue } from "next/dist/shared/lib/get-img-props";
 import Image from "next/image";
 
@@ -12,7 +13,21 @@ const TransformedImage = ({
   transformationConfig,
   hasDownload = false,
 }: TransformedImageProps) => {
-  const downloadHandler = () => {};
+  const downloadHandler = (
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ) => {
+    e.preventDefault();
+
+    download(
+      getCldImageUrl({
+        width: image?.width,
+        height: image?.height,
+        src: image?.publicId,
+        ...transformationConfig,
+      }),
+      title
+    );
+  };
   return (
     <div className="flex flex-col gap-4">
       <div className="flex-between">
@@ -45,19 +60,22 @@ const TransformedImage = ({
               debounce(
                 () => setIsTransforming && setIsTransforming(false),
                 8000
-              )
+              )() // The extra () immediately invokes the debounced function
+              // Without the (), we would just be creating a debounced function but not executing it
+              // We need to call it right away when an error occurs
             }
             {...transformationConfig}
           />
           {isTransforming && (
-            <div className="loading">
+            <div className="transforming-loader">
               <Image
+                className="cursor-pointer pb-[6px]"
                 src="/assets/icons/spinner.svg"
                 alt="loading"
                 width={24}
                 height={24}
-                className="cursor-pointer pb-[6px]"
               />
+              <p className="text-white/80">Please wait...</p>
             </div>
           )}
         </div>

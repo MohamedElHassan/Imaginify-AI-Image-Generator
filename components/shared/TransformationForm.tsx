@@ -205,6 +205,7 @@ const TransformationForm = ({
           render={({ field }) => <Input {...field} className="input-field" />}
         />
         {type === "fill" && (
+          // TODO: fix bug take infinite time to applying the transformation. fix fix fix
           <CustomField
             control={form.control}
             name="aspectRatio"
@@ -215,6 +216,7 @@ const TransformationForm = ({
                 onValueChange={(value) =>
                   onSelectFieldHandler(value, field.onChange)
                 }
+                value={field.value}
               >
                 <SelectTrigger className="select-field">
                   <SelectValue placeholder="Select size" />
